@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Camp 鼓励贴自动生成器</title>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, sans-serif;
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .panel-left {
+            flex: 1;
+            min-width: 340px;
+            background: #fff;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .panel-right {
+            flex: 1;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 20px;
+        }
+        .form-item {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #444;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .row-two {
+            display: flex;
+            gap:12px;
+        }
+        .row-two .form-item {
+            flex:1;
+        }
+        .btn-group {
+            display: flex;
+            gap:10px;
+            flex-wrap: wrap;
+            margin:18px 0;
+        }
+        button {
+            padding:10px 16px;
+            border: none;
+            border-radius:8px;
+            cursor: pointer;
+            font-size:14px;
+        }
+        .btn-generate {
+            background-color: #3b82f6;
+            color:white;
+            font-weight:bold;
+            flex:1;
+            font-size:16px;
+        }
+        .btn-adjust {
+            background-color: #eef2ff;
+            color:#3b82f6;
+            width:60px;
+        }
+        .preview-wrap {
+            position: relative;
+            width: 420px;
+        }
+        #cardWrap {
+            position: relative;
+            width: 420px;
+            height: 560px;
+            overflow:hidden;
+            border-radius:16px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+        }
+        .card-bg {
+            width:100%;
+            height:100%;
+            object-fit: cover;
+            position:absolute;
+            top:0;
+            left:0;
+            z-index:1;
+        }
+        .text-layer {
+            position:absolute;
+            z-index:2;
+            width:100%;
+            height:100%;
+        }
+        .main-text {
+            white-space: pre-wrap;
+            line-height:1.8;
+            text-indent: 2em;
+        }
+        .sign-area {
+            position:absolute;
+        }
+        .sign-name {
+            display:block;
+            font-style: italic;
+            border-bottom: 1.5px solid #444;
+            padding-bottom:3px;
+        }
+        .sign-date {
+            display:block;
+            margin-top:4px;
+            font-family: monospace;
+        }
+        .tip {
+            margin-top:12px;
+            color:#666;
+            font-size:13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="panel-left">
+            <h2>✅ 鼓励贴设置面板</h2>
+            <div class="form-item">
+                <label>选择模板（Vocabulary Camp 小鹰系列）</label>
+                <select id="templateSelect"></select>
+            </div>
+            <div class="form-item">
+                <label>正文内容</label>
+                <textarea id="mainText">我知道，在一次次跳跃中，你正在积蓄力量。坚持积累单词，认真走好每一步，你远比想象中更厉害！继续闪闪发光吧✨</textarea>
+            </div>
+            <div class="row-two">
+                <div class="form-item">
+                    <label>签名</label>
+                    <input id="signName" value="爱你的妈妈">
+                </div>
+                <div class="form-item">
+                    <label>日期</label>
+                    <input id="signDate">
+                </div>
+            </div>
+            <div class="row-two">
+                <div class="form-item">
+                    <label>正文字号</label>
+                    <select id="fontSize">
+                        <option value="12">12px</option>
+                        <option value="14" selected>14px</option>
+                        <option value="16">16px</option>
+                        <option value="18">18px</option>
+                        <option value="20">20px</option>
+                        <option value="24">24px</option>
+                    </select>
+                </div>
+                <div class="form-item">
+                    <label>签名位置</label>
+                    <select id="signPos">
+                        <option value="bl">左下角（避开右下角插画）</option>
+                        <option value="br">右下角</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row-two">
+                <div class="form-item">
+                    <label>正文字体</label>
+                    <select id="mainFont">
+                        <option value="KaiTi, STKaiti, SimSun, serif">楷体（推荐）</option>
+                        <option value="cursive">手写体</option>
+                        <option value="Microsoft YaHei, sans-serif">微软雅黑</option>
+                    </select>
+                </div>
+                <div class="form-item">
+                    <label>签名手写字体</label>
+                    <select id="signFont">
+                        <option value="cursive">cursive 手写</option>
+                        <option value="KaiTi, STKaiti">楷体手写</option>
+                        <option value="'Segoe Script', cursive">Segoe Script</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row-two">
+                <div class="form-item">
+                    <label>正文颜色</label>
+                    <input type="color" id="mainColor" value="#222222">
+                </div>
+                <div class="form-item">
+                    <label>签名颜色</label>
+                    <input type="color" id="signColor" value="#222222">
+                </div>
+            </div>
+
+            <label>文字区域偏移调节（避开图案）</label>
+            <div class="btn-group">
+                <button class="btn-adjust" onclick="adjust('up')">↑</button>
+                <button class="btn-adjust" onclick="adjust('down')">↓</button>
+                <button class="btn-adjust" onclick="adjust('left')">←</button>
+                <button class="btn-adjust" onclick="adjust('right')">→</button>
+                <button class="btn-adjust" onclick="resetOffset()">重置偏移</button>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-generate" onclick="exportImage()">📥 导出高清鼓励贴</button>
+            </div>
+            <div class="tip">提示：偏移数值会跟随当前模板独立保存，切换模板互不干扰</div>
+        </div>
+        <div class="panel-right">
+            <h2>🖼️ 实时预览</h2>
+            <div class="preview-wrap">
+                <div id="cardWrap">
+                    <img class="card-bg" id="bgImg" src="" alt="模板底图">
+                    <div class="text-layer" id="textLayer">
+                        <div class="main-text" id="mainTextDom"></div>
+                        <div class="sign-area" id="signArea">
+                            <span class="sign-name" id="signNameDom"></span>
+                            <span class="sign-date" id="signDateDom"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// ===================== 17张 Vocabulary Camp 模板列表（imgBB链接已填好） =====================
+const templateList = [
+    { name: "探索鹰 (1)", bgUrl: "https://i.ibb.co/Zpym0stq/1.png", safePadding:[40,40,100,40] },
+    { name: "音乐鹰 (2)", bgUrl: "https://i.ibb.co/xRZPhJh/2.png", safePadding:[40,40,100,40] },
+    { name: "魔法鹰 (3)", bgUrl: "https://i.ibb.co/tVc6XZn/3.png", safePadding:[40,40,100,40] },
+    { name: "魔法鹰 (4)", bgUrl: "https://i.ibb.co/qYPkdmzL/4.png", safePadding:[40,40,100,40] },
+    { name: "魔法鹰 (5)", bgUrl: "https://i.ibb.co/mVP8FqFK/5.png", safePadding:[40,40,100,40] },
+    { name: "书生鹰 (6)", bgUrl: "https://i.ibb.co/Kttz5dS/6.png", safePadding:[40,40,100,40] },
+    { name: "滑板鹰(7)", bgUrl: "https://i.ibb.co/NgSH2TML/7.png", safePadding:[40,40,100,40] },
+    { name: "探索鹰 (8)", bgUrl: "https://i.ibb.co/ZpjqFLk9/8.png", safePadding:[40,40,100,40] },
+    { name: "滑板鹰鼓励贴 (9)", bgUrl: "https://i.ibb.co/Jw3Qxg6K/9.png", safePadding:[40,40,100,40] },
+    { name: "探索鹰鼓励贴 (10)", bgUrl: "https://i.ibb.co/QvXrthMx/10.png", safePadding:[40,40,100,40] },
+    { name: "书生鹰鼓励贴 (11)", bgUrl: "https://i.ibb.co/vxdRDRDp/11.png", safePadding:[40,40,100,40] },
+    { name: "篮球鹰 (12)", bgUrl: "https://i.ibb.co/Kpwr2HXs/12.png", safePadding:[40,40,100,40] },
+    { name: "篮球鹰(13)", bgUrl: "https://i.ibb.co/jPZyhgH7/13.png", safePadding:[40,40,100,40] },
+    { name: "烘焙鹰 (14)", bgUrl: "https://i.ibb.co/SXWg7W6g/14.png", safePadding:[40,40,100,40] },
+    { name: "音乐鹰 (15)", bgUrl: "https://i.ibb.co/W4rqwtDB/15.png", safePadding:[40,40,100,40] },
+    { name: "棒球鹰(16)", bgUrl: "https://i.ibb.co/sdQ9PRLW/16.png", safePadding:[40,40,100,40] },
+    { name: "警察鹰 (17)", bgUrl: "https://i.ibb.co/xSHtSzLK/17.png", safePadding:[40,40,100,40] },
+];
+// 每个模板独立存储偏移量
+const offsetStore = {};
+templateList.forEach((item,idx)=>{
+    offsetStore[idx] = {dx:0, dy:0};
+})
+
+// DOM
+const templateSelect = document.getElementById('templateSelect');
+const bgImg = document.getElementById('bgImg');
+const textLayer = document.getElementById('textLayer');
+const mainTextDom = document.getElementById('mainTextDom');
+const signNameDom = document.getElementById('signNameDom');
+const signDateDom = document.getElementById('signDateDom');
+const signArea = document.getElementById('signArea');
+
+// 填充下拉
+templateList.forEach((t,i)=>{
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.innerText = t.name;
+    templateSelect.appendChild(opt);
+})
+
+// 默认日期
+function getToday(){
+    const d = new Date();
+    return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+document.getElementById('signDate').value = getToday();
+
+// 切换模板
+templateSelect.onchange = render;
+// 所有输入控件变化实时渲染
+document.querySelectorAll('input, select, textarea').forEach(el=>{
+    el.oninput = render;
+})
+
+// 偏移控制
+function adjust(dir){
+    const idx = Number(templateSelect.value);
+    const step = 4;
+    const o = offsetStore[idx];
+    if(dir === 'up') o.dy -= step;
+    if(dir === 'down') o.dy += step;
+    if(dir === 'left') o.dx -= step;
+    if(dir === 'right') o.dx += step;
+    render();
+}
+function resetOffset(){
+    const idx = Number(templateSelect.value);
+    offsetStore[idx] = {dx:0, dy:0};
+    render();
+}
+
+// 主渲染函数
+function render(){
+    const idx = Number(templateSelect.value);
+    const tpl = templateList[idx];
+    const off = offsetStore[idx];
+    bgImg.src = tpl.bgUrl;
+
+    const mainText = document.getElementById('mainText').value;
+    const signName = document.getElementById('signName').value;
+    const signDate = document.getElementById('signDate').value;
+    const fontSize = document.getElementById('fontSize').value;
+    const signPos = document.getElementById('signPos').value;
+    const mainFont = document.getElementById('mainFont').value;
+    const signFont = document.getElementById('signFont').value;
+    const mainColor = document.getElementById('mainColor').value;
+    const signColor = document.getElementById('signColor').value;
+    const [padTop, padRight, padBottom, padLeft] = tpl.safePadding;
+
+    // 文字层内边距 + 偏移
+    textLayer.style.padding = `${padTop + off.dy}px ${padRight - off.dx}px ${padBottom - off.dy}px ${padLeft + off.dx}px`;
+
+    // 正文
+    mainTextDom.innerText = mainText;
+    mainTextDom.style.fontFamily = mainFont;
+    mainTextDom.style.fontSize = fontSize + 'px';
+    mainTextDom.style.color = mainColor;
+
+    // 签名
+    signNameDom.innerText = signName;
+    signNameDom.style.fontFamily = signFont;
+    signNameDom.style.fontSize = (Number(fontSize)+3)+'px';
+    signNameDom.style.color = signColor;
+    signNameDom.style.borderColor = signColor;
+    signDateDom.innerText = signDate;
+    signDateDom.style.color = signColor;
+
+    // 签名位置：左下角 / 右下角
+    if(signPos === 'bl'){
+        signArea.style.bottom = "30px";
+        signArea.style.left = "30px";
+        signArea.style.right = "auto";
+    }else{
+        signArea.style.bottom = "30px";
+        signArea.style.right = "30px";
+        signArea.style.left = "auto";
+    }
+}
+
+// 导出高清图片 scale=2
+async function exportImage(){
+    const cardDom = document.getElementById('cardWrap');
+    const canvas = await html2canvas(cardDom, {
+        scale:2,
+        useCORS:true,
+        backgroundColor:null,
+        logging:false
+    });
+    const link = document.createElement('a');
+    link.download = `鼓励贴_${templateList[templateSelect.value].name}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+}
+
+// 初始化渲染
+render();
+</script>
+</body>
+</html>
